@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload and Download</title>
+    <!-- Include the external CSS file -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="column">
+            <h2>Upload File</h2>
+            <form id="fileForm">
+                <label for="fileInput">Upload a file:</label><br>
+                <input type="file" id="fileInput" name="fileInput">
+                <br/><br/>
+                <input type="submit" value="Upload File">
+            </form>
+            <h2 class="output-text">Output:</h2>
+            <div id="fileResult"></div>
+        </div>
+    </div>
+    <div class="file-list">
+        <h2>List of Files</h2>
+        <ul id="filesList"></ul>
+    </div>
+
+    <script>
+        // Function to fetch and display the list of files
+        function fetchFilesList() {
+            // fetch('https://fireflylab.cc:9996/files')
+            fetch('http://localhost:8001/files')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('filesList').innerHTML = data;
+                    // Add event listeners to file links
+                    document.querySelectorAll('#filesList a').forEach(link => {
+                        link.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            var filename = this.getAttribute('href').split('/').pop();
+                            downloadFile(filename);
+                        });
+                    });
+                })
+                .catch(error => console.error('Error fetching files list:', error));
+        }
+
+        // Function to download a file
+        function downloadFile(filename) {
+            // fetch('https://fireflylab.cc:9996/download/' + filename)
+            fetch('http://localhost:8001/download/' + filename)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to download file');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                })
+                .catch(error => console.error('Error downloading file:', error));
+        }
+
+        fetchFilesList();
+
+        document.getElementById('fileForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            var formData = new FormData();
+            formData.append('file', file);
+
+            // fetch('https://fireflylab.cc:9996', {
+            //     method: 'POST',
+            //     body: formData,
+            // })
+
+            fetch('http://localhost:8001', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById('fileResult').textContent = result;
+                fetchFilesList();  // Update the list of files after uploading
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('fileResult').textContent = 'Upload failed.';
+            });
+        });
+    </script>
+</body>
+</html>

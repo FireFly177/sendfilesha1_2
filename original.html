@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHA-1 Hash Generator</title>
+    <!-- Include the external CSS file -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="column">
+            <h2>Hash String</h2>
+            <form id="stringForm">
+                <label for="stringInput">Enter a string:</label><br>
+                <input type="text" id="stringInput" name="stringInput"><br><br>
+                <input type="submit" value="Hash String">
+            </form>
+            <h2 class="output-text">Output:</h2>
+            <div id="stringResult"></div>
+        </div>
+        <div class="column">
+            <h2>Hash File</h2>
+            <form id="fileForm">
+                <label for="fileInput">Upload a file:</label><br>
+                <input type="file" id="fileInput" name="fileInput">
+                <br/><br/>
+                <input type="submit" value="Hash File">
+            </form>
+            <h2 class="output-text">Output:</h2>
+            <div id="fileResult"></div>
+        </div>
+    </div>
+    <div class="file-list">
+        <h2>List of Files</h2>
+        <ul id="filesList"></ul>
+    </div>
+
+    <script>
+        // Function to fetch and display the list of files
+        function fetchFilesList() {
+            fetch('http://localhost:8001/files')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('filesList').innerHTML = data;
+                    // Add event listeners to file links
+                    document.querySelectorAll('#filesList a').forEach(link => {
+                        link.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            var filename = this.getAttribute('href').split('/').pop();
+                            downloadFile(filename);
+                        });
+                    });
+                })
+                .catch(error => console.error('Error fetching files list:', error));
+        }
+
+        // Function to download a file
+        function downloadFile(filename) {
+            fetch('http://localhost:8001/download/' + filename)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to download file');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    // Create a temporary link element
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = filename;
+                    // Trigger the download
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                })
+                .catch(error => console.error('Error downloading file:', error));
+        }
+
+        // Fetch and display the initial list of files
+        fetchFilesList();
+
+        // Add event listener to file upload form
+        document.getElementById('fileForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            var formData = new FormData();
+            formData.append('file', file);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://localhost:8001', true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        document.getElementById('fileResult').textContent = xhr.responseText;
+                        // Update the list of files after uploading
+                        fetchFilesList();
+                    } else {
+                        document.getElementById('fileResult').textContent = 'Error: ' + xhr.statusText;
+                    }
+                }
+            };
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>
