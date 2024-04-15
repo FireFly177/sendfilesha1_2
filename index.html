@@ -29,8 +29,8 @@
     <script>
         // Function to fetch and display the list of files
         function fetchFilesList() {
-            // fetch('https://fireflylab.cc:9996/files')
-            fetch('http://localhost:8001/files')
+            fetch('https://fireflylab.cc:9999/files')
+            // fetch('http://localhost:8000/files')
                 .then(response => response.text())
                 .then(data => {
                     document.getElementById('filesList').innerHTML = data;
@@ -48,8 +48,8 @@
 
         // Function to download a file
         function downloadFile(filename) {
-            // fetch('https://fireflylab.cc:9996/download/' + filename)
-            fetch('http://localhost:8001/download/' + filename)
+            fetch('https://fireflylab.cc:9999/download/' + filename)
+            // fetch('http://localhost:8000/download/' + filename)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Failed to download file');
@@ -76,15 +76,15 @@
             var formData = new FormData();
             formData.append('file', file);
 
-            // fetch('https://fireflylab.cc:9996', {
-            //     method: 'POST',
-            //     body: formData,
-            // })
-
-            fetch('http://localhost:8001', {
+            fetch('https://fireflylab.cc:9999', {
                 method: 'POST',
                 body: formData,
             })
+
+            // fetch('http://localhost:8000', {
+            //     method: 'POST',
+            //     body: formData,
+            // })
             .then(response => response.text())
             .then(result => {
                 document.getElementById('fileResult').textContent = result;
